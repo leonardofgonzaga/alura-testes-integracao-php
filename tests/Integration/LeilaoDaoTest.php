@@ -25,29 +25,70 @@ class LeilaoDaoTest extends TestCase
     }
 
     protected function setUp(): void
-    {
-        
+    {        
         self::$pdo->beginTransaction();
     }
 
-    public function testInsercaoEBuscaDevemFuncionar()
+    /**
+     * @dataProvider leiloes
+     */
+    public function testBuscaLeiloesNaoFinalizados(array $leiloes)
     {
-        $leilao = new Leilao('Variant 0KM');
-        $pdo = ConnectionCreator::getConnection();
-        $leilaoDao = new LeilaoDao($pdo);   
+        // Arrange
+        $leilaoDao = new LeilaoDao(self::$pdo);
 
-        $leilaoDao->salva($leilao);
+        foreach ($leiloes as $leilao) {
+            $leilaoDao->salva($leilao);
+        }
+
+        // Act 
         $leiloes = $leilaoDao->recuperarNaoFinalizados();
 
+        // Assert
         self::assertCount(1, $leiloes);
         self::assertContainsOnlyInstancesOf(Leilao::class, $leiloes);
         self::assertSame('Variant 0KM', $leiloes[0]->recuperarDescricao());
+        self::assertFalse($leiloes[0]->estaFinalizado());
+    }
 
-        $pdo->exec('DELETE FROM leiloes');
+    /**
+     * @dataProvider leiloes
+     */
+    public function testBuscaLeiloesFinalizados(array $leiloes)
+    {
+        // Arrange
+        $leilaoDao = new LeilaoDao(self::$pdo); 
+
+        foreach ($leiloes as $leilao) {
+            $leilaoDao->salva($leilao);
+        }
+
+        // Act 
+        $leiloes = $leilaoDao->recuperarFinalizados();
+
+        // Assert
+        self::assertCount(1, $leiloes);
+        self::assertContainsOnlyInstancesOf(Leilao::class, $leiloes);
+        self::assertSame('Fiat 147 0KM', $leiloes[0]->recuperarDescricao());
+        self::assertTrue($leiloes[0]->estaFinalizado());
     }
 
     protected function tearDown(): void
     {
         self::$pdo->rollBack();
+    }
+
+    public function leiloes()
+    {
+        $naoFinalizado = new Leilao('Variant 0KM');
+
+        $finalizado = new Leilao('Fiat 147 0KM');
+        $finalizado->finaliza();
+
+        return [
+            [
+                [$naoFinalizado, $finalizado]
+            ]
+        ];
     }
 }
