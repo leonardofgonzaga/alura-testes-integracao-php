@@ -1,12 +1,11 @@
 <?php
 
-namespace Alura\Leilao\Tests\Integration\Service;
+namespace Alura\Leilao\Tests\Integration\Dao;
 
 use PDO;
 use Alura\Leilao\Model\Leilao;
 use PHPUnit\Framework\TestCase;
 use Alura\Leilao\Dao\Leilao as LeilaoDao;
-use Alura\Leilao\Infra\ConnectionCreator;
 
 class LeilaoDaoTest extends TestCase
 {
